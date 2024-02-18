@@ -53,7 +53,7 @@ fun ChordListView()
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 title = {
-                    Text("Test")
+                    Text("コード進行メモ")
                 }
             )
         }
@@ -65,7 +65,9 @@ fun ChordListView()
 
 @Composable
 fun ChordList(topBarPadding: PaddingValues) {
+    // ToDo: データベースからリストを生成する
     val testList = listOf("a", "b", "c")
+
     LazyColumn(
         modifier = Modifier.padding(topBarPadding)
     ) {
