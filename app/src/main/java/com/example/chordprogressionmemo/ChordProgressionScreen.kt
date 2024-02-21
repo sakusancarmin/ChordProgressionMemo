@@ -1,93 +1,92 @@
 package com.example.chordprogressionmemo
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+enum class ButtonMode {
+    BACK, ADD
+}
+
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChordProgressionScreen(itemName: String = "", onClick: () -> Unit = {}) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                title = {
-                    Text(text = itemName)
-                },
-                navigationIcon = {
-                    IconButton(onClick = onClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = ""
-                        )
-                    }
-                }
-            )
+fun ChordProgressionScreen(itemName: String = "", onClick: (ButtonMode) -> Unit = {}) {
+    Scaffold(topBar = {
+        TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.primary,
+        ), title = {
+            Text(text = itemName)
+        }, navigationIcon = {
+            IconButton(onClick = {
+                onClick(ButtonMode.BACK)
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = ""
+                )
+            }
+        })
+    },
+
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                onClick(ButtonMode.ADD)
+            }) {
+                Icon(Icons.Default.Add, contentDescription = "追加")
+            }
         }
+
     ) {
-        var expanded by remember { mutableStateOf(false) }
-        var selectedOptionText by remember { mutableStateOf("") }
-
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
+        Column(
             modifier = Modifier.padding(it)
         ) {
-            val noteOptions = NoteName.entries
-
-            TextField(
-                modifier = Modifier.menuAnchor(),
-                readOnly = true,
-                value = selectedOptionText,
-                onValueChange = {},
-                label = { Text("根音") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults.textFieldColors()
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                noteOptions.forEach {
-                    DropdownMenuItem(
-                        text = { Text(it.displayName()) },
-                        onClick = {
-                            selectedOptionText = it.displayName()
-                            expanded = false
-                        },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                    )
-
-                }
-
-            }
-
-
+            //ChordProgressionList()
         }
-
     }
 }
+
+@Composable
+fun ChordProgressionList() {
+    LazyColumn() {
+        val chordProgressionList = listOf("")
+
+        items(chordProgressionList) {
+            ChordProgressionItem()
+            HorizontalDivider(thickness = Dp.Hairline)
+        }
+    }
+}
+
+
+@Composable
+fun ChordProgressionItem() {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {}
+}
+
+

@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
 
                     val TOP_SCREEN = "top_screen"
                     val CHORD_SCREEN = "chord_screen"
+                    val INPUT_SCREEN = "input_screen"
 
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = TOP_SCREEN) {
@@ -47,8 +48,24 @@ class MainActivity : ComponentActivity() {
                             val item = backStackEntry.arguments?.getString("item") ?: ""
                             assert(item != "")
 
-                            ChordProgressionScreen(item) {
-                                // 戻るボタン押すと呼ばれる
+                            ChordProgressionScreen(item) { mode ->
+                                when(mode) {
+                                    ButtonMode.BACK -> {
+                                        navController.navigateUp()
+                                    }
+                                    ButtonMode.ADD -> {
+                                        navController.navigate(INPUT_SCREEN)
+                                    }
+                                }
+                            }
+                        }
+
+                        composable(
+                            route = INPUT_SCREEN
+                        )
+                        {
+                            ChordInputScreen() {
+                                // ボタン押すと呼ばれる
                                 navController.navigateUp()
                             }
                         }
