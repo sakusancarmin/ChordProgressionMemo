@@ -35,10 +35,14 @@ import kotlinx.coroutines.launch
 
 @Stable
 class ChordInputState(
-    chordInfo: ChordInfo
+    initialChordInfo: ChordInfo
 ) {
-    var chordInfo = chordInfo
-        private set
+    private var _chordInfo = mutableStateOf(initialChordInfo)
+    var chordInfo: ChordInfo
+        get() = _chordInfo.value
+        private set(value) {
+            _chordInfo.value = value
+        }
 
     fun setRootNote(rootNote: String) {
         // デフォルトはバス音 = 根音とする。
@@ -62,16 +66,6 @@ class ChordInputState(
         return (chordInfo.rootNote != "" && chordInfo.bassNote != "")
     }
 }
-
-@Composable
-fun rememberChordInputState(
-    chordInfo: ChordInfo
-): ChordInputState {
-    return remember(chordInfo) {
-        ChordInputState(chordInfo)
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,22 +107,12 @@ fun InputForm() {
         modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // オクターブ音のみ初期値を持つ
-        var chordState = rememberChordInputState(ChordInfo(octave = 4))
-        /*
-        var player by remember {
-            Log.v("ChordPlayer", "remember")
-            mutableStateOf<ChordPlayer>(ChordPlayer(context, ChordInfo()))
-        }
-        */
+        val chordState = remember { ChordInputState(ChordInfo(octave = 4)) }
 
-        // TODO: 現状、根音を入力すると、ベース音の初期表示が変わる処理が動かない
-        // NOTE: (おそらく)監視対象であるchordStateの指す先が変わらないとrecomposeされない
-        //       そのため、関数の引数でchordStateを渡してはいけない
         RootNoteDropdownMenuBox(chordState)
         ChordQualityDropdownMenuBox(chordState)
         BassNoteDropdownMenuBox(chordState)
         OctaveDropdownMenuBox(chordState)
-
 
         Row(
         ) {
@@ -243,7 +227,7 @@ fun BassNoteDropdownMenuBox(chordState: ChordInputState) {
         TextField(
             modifier = Modifier.menuAnchor(),
             readOnly = true,
-            value = chordState.chordInfo.bassNote,
+            value = "on" + chordState.chordInfo.bassNote,
             onValueChange = {},
             label = { Text("ベース音") },
             trailingIcon = { TrailingIcon(expanded = expanded) },
