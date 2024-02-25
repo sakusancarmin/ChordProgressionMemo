@@ -1,5 +1,6 @@
 package com.example.chordprogressionmemo
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,64 +29,102 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+@Stable
+class ChordInputState(
+    chordInfo: ChordInfo
+) {
+    var chordInfo = chordInfo
+        private set
+
+    fun setRootNote(rootNote: String) {
+        // デフォルトはバス音 = 根音とする。
+        // 根音を変えた場合も、バス音は根音に追従して変更する（バス音をそのまま引き継ぐシーンはほぼないと想定）
+        chordInfo = chordInfo.copy(rootNote = rootNote, bassNote = rootNote)
+    }
+
+    fun setQuality(quality: String) {
+        chordInfo = chordInfo.copy(quality = quality)
+    }
+
+    fun setBassNote(bassNote: String) {
+        chordInfo = chordInfo.copy(bassNote = bassNote)
+    }
+
+    fun setOctave(octave: Int) {
+        chordInfo = chordInfo.copy(octave = octave)
+    }
+
+    fun isValidated(): Boolean {
+        return (chordInfo.rootNote != "" && chordInfo.bassNote != "")
+    }
+}
+
+@Composable
+fun rememberChordInputState(
+    chordInfo: ChordInfo
+): ChordInputState {
+    return remember(chordInfo) {
+        ChordInputState(chordInfo)
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChordInputScreen(itemName: String = "", onClick: () -> Unit = {}) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-                title = {
-                    Text(text = itemName)
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onClick
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = ""
-                        )
-                    }
-                }
-            )
-        }
-    ) {
+    Scaffold(topBar = {
+        TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.primary,
+        ), title = {
+            Text(text = itemName)
+        }, navigationIcon = {
+            IconButton(
+                onClick = onClick
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = ""
+                )
+            }
+        })
+    }) {
         Column(
             modifier = Modifier.padding(it),
 
-        ) {
+            ) {
             InputForm()
-
-
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputForm() {
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        RootNoteDropdownMenuBox()
-        ChordQualityDropdownMenuBox()
-        BassNoteDropdownMenuBox()
-        OctaveDropdownMenuBox()
+        // オクターブ音のみ初期値を持つ
+        var chordState = rememberChordInputState(ChordInfo(octave = 4))
+
+        Log.v("InputForm", "Recomposable!")
+
+        // TODO: 現状、根音を入力すると、ベース音の初期表示が変わる処理が動かない
+        // NOTE: (おそらく)監視対象であるchordStateの指す先が変わらないとrecomposeされない
+        //       そのため、関数の引数でchordStateを渡してはいけない
+        RootNoteDropdownMenuBox(chordState)
+        ChordQualityDropdownMenuBox(chordState)
+        BassNoteDropdownMenuBox(chordState)
+        OctaveDropdownMenuBox(chordState)
     }
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RootNoteDropdownMenuBox() {
+fun RootNoteDropdownMenuBox(chordState: ChordInputState) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf("") }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -95,7 +135,7 @@ fun RootNoteDropdownMenuBox() {
         TextField(
             modifier = Modifier.menuAnchor(),
             readOnly = true,
-            value = selectedOptionText,
+            value = chordState.chordInfo.rootNote,
             onValueChange = {},
             label = { Text("根音") },
             trailingIcon = { TrailingIcon(expanded = expanded) },
@@ -106,13 +146,10 @@ fun RootNoteDropdownMenuBox() {
             onDismissRequest = { expanded = false },
         ) {
             noteOptions.forEach {
-                DropdownMenuItem(
-                    text = { Text(it.displayName()) },
-                    onClick = {
-                        selectedOptionText = it.displayName()
-                        expanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                DropdownMenuItem(text = { Text(it.displayName()) }, onClick = {
+                    chordState.setRootNote(it.displayName())
+                    expanded = false
+                }, contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
 
             }
@@ -124,10 +161,8 @@ fun RootNoteDropdownMenuBox() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChordQualityDropdownMenuBox() {
+fun ChordQualityDropdownMenuBox(chordState: ChordInputState) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf("") }
-
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -138,24 +173,18 @@ fun ChordQualityDropdownMenuBox() {
         TextField(
             modifier = Modifier.menuAnchor(),
             readOnly = true,
-            value = selectedOptionText,
+            value = chordState.chordInfo.quality,
             onValueChange = {},
             label = { Text("種類") },
             trailingIcon = { TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.textFieldColors()
         )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             qualityOptions.forEach {
-                DropdownMenuItem(
-                    text = { Text(it.displayName()) },
-                    onClick = {
-                        selectedOptionText = it.displayName()
-                        expanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                DropdownMenuItem(text = { Text(it.displayName()) }, onClick = {
+                    chordState.setQuality(it.displayName())
+                    expanded = false
+                }, contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
 
             }
@@ -167,20 +196,16 @@ fun ChordQualityDropdownMenuBox() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BassNoteDropdownMenuBox() {
+fun BassNoteDropdownMenuBox(chordState: ChordInputState) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf("") }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        val noteOptions = listOf(null) + NoteName.entries
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        val noteOptions = NoteName.entries
 
         TextField(
             modifier = Modifier.menuAnchor(),
             readOnly = true,
-            value = selectedOptionText,
+            value = chordState.chordInfo.bassNote,
             onValueChange = {},
             label = { Text("ベース音") },
             trailingIcon = { TrailingIcon(expanded = expanded) },
@@ -191,17 +216,14 @@ fun BassNoteDropdownMenuBox() {
             onDismissRequest = { expanded = false },
         ) {
             noteOptions.forEach { noteName ->
+                val displayName = "on" + noteName.displayName()
 
-                val displayName = noteName?.let { "on" + it.displayName() } ?: ""
-                DropdownMenuItem(
-                    text = {
-                        Text(displayName)
-                    },
-                    onClick = {
-                        selectedOptionText = displayName
-                        expanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                DropdownMenuItem(text = {
+                    Text(displayName)
+                }, onClick = {
+                    chordState.setBassNote(noteName.displayName())
+                    expanded = false
+                }, contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
             }
 
@@ -213,20 +235,16 @@ fun BassNoteDropdownMenuBox() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OctaveDropdownMenuBox() {
+fun OctaveDropdownMenuBox(chordState: ChordInputState) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf("4") }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         var octaveOptions = (0..7).toList()
 
         TextField(
             modifier = Modifier.menuAnchor(),
             readOnly = true,
-            value = selectedOptionText,
+            value = chordState.chordInfo.octave.toString(),
             onValueChange = {},
             label = { Text("オクターブ") },
             trailingIcon = { TrailingIcon(expanded = expanded) },
@@ -239,19 +257,15 @@ fun OctaveDropdownMenuBox() {
             octaveOptions.forEach { octave ->
 
                 val displayName = octave.toString()
-                DropdownMenuItem(
-                    text = {
-                        Text(displayName)
-                    },
-                    onClick = {
-                        selectedOptionText = displayName
-                        expanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                DropdownMenuItem(text = {
+                    Text(displayName)
+                }, onClick = {
+                    chordState.setOctave(octave)
+                    expanded = false
+                }, contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
             }
 
         }
-
     }
 }

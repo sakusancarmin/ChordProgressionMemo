@@ -1,5 +1,8 @@
 package com.example.chordprogressionmemo
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 // コードの種類をまとめたもの
 enum class ChordQuality(val displayName: String) {
     MAJOR(""),
@@ -14,11 +17,13 @@ enum class ChordQuality(val displayName: String) {
     }
 }
 
-// コードの情報を格納する
+
+@Entity
 data class ChordInfo(
-    val rootNote :NoteName,
-    val quality :ChordQuality,
-    val bassNote :NoteName,
-    val octave :Int)
-{
-}
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val chordId: Long = 0,
+    val rootNote: String = "",
+    val quality: String = "",
+    val bassNote: String = "",
+    val octave: Int = 0
+)
