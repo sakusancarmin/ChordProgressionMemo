@@ -1,12 +1,13 @@
 package com.example.chordprogressionmemo
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -25,9 +26,12 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 @Stable
 class ChordInputState(
@@ -102,13 +106,20 @@ fun ChordInputScreen(itemName: String = "", onClick: () -> Unit = {}) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InputForm() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // オクターブ音のみ初期値を持つ
         var chordState = rememberChordInputState(ChordInfo(octave = 4))
-
-        Log.v("InputForm", "Recomposable!")
+        /*
+        var player by remember {
+            Log.v("ChordPlayer", "remember")
+            mutableStateOf<ChordPlayer>(ChordPlayer(context, ChordInfo()))
+        }
+        */
 
         // TODO: 現状、根音を入力すると、ベース音の初期表示が変わる処理が動かない
         // NOTE: (おそらく)監視対象であるchordStateの指す先が変わらないとrecomposeされない
@@ -117,6 +128,33 @@ fun InputForm() {
         ChordQualityDropdownMenuBox(chordState)
         BassNoteDropdownMenuBox(chordState)
         OctaveDropdownMenuBox(chordState)
+
+
+        Row(
+        ) {
+            var isPlayButtonEnabled by remember { mutableStateOf(true) }
+            Button(
+                onClick = {
+                    isPlayButtonEnabled = false
+                    if (!chordState.isValidated()) {
+                        isPlayButtonEnabled = true
+                        return@Button
+                    }
+
+                    val player = ChordPlayer(context, chordState.chordInfo)
+                    scope.launch {
+                        player.waitForReady()
+                        player.play()
+                        player.stop(2_000L)
+                        player.release()
+                        isPlayButtonEnabled = true
+                    }
+                },
+                enabled = isPlayButtonEnabled
+            ) {
+                Text("プレビュー再生")
+            }
+        }
     }
 }
 
@@ -239,7 +277,7 @@ fun OctaveDropdownMenuBox(chordState: ChordInputState) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        var octaveOptions = (0..7).toList()
+        val octaveOptions = (3..4).toList()
 
         TextField(
             modifier = Modifier.menuAnchor(),
@@ -255,7 +293,6 @@ fun OctaveDropdownMenuBox(chordState: ChordInputState) {
             onDismissRequest = { expanded = false },
         ) {
             octaveOptions.forEach { octave ->
-
                 val displayName = octave.toString()
                 DropdownMenuItem(text = {
                     Text(displayName)

@@ -54,4 +54,11 @@ enum class NoteName(val noteName: BasicNoteName, val accidental: AccidentalMark 
     {
         return noteName.displayName + accidental.displayName
     }
+
+
+    companion object {
+        fun lookup(displayName: String): NoteName {
+            return entries.find { it.displayName() == displayName } ?: throw IllegalArgumentException()
+        }
+    }
 }

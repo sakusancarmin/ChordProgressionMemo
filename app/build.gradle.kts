@@ -59,7 +59,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3:1.2.0")
-    implementation("androidx.compose.ui:ui-graphics-android:1.6.1")
+    implementation("androidx.compose.ui:ui-graphics-android:1.6.2")
     implementation("androidx.room:room-common:2.6.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -74,4 +74,9 @@ dependencies {
     // Jetpack Compose Integration
     implementation("androidx.navigation:navigation-compose:$nav_version")
 
+    val media3_version = "1.2.1"
+    // For media playback using ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:$media3_version")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
 }
