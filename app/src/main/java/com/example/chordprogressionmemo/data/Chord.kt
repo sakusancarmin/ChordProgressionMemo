@@ -1,4 +1,4 @@
-package com.example.chordprogressionmemo
+package com.example.chordprogressionmemo.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

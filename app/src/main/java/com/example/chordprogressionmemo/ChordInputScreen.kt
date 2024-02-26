@@ -31,6 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.example.chordprogressionmemo.data.ChordInfo
+import com.example.chordprogressionmemo.data.ChordQuality
+import com.example.chordprogressionmemo.data.NoteName
 import kotlinx.coroutines.launch
 
 @Stable

@@ -9,6 +9,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import com.example.chordprogressionmemo.data.ChordInfo
+import com.example.chordprogressionmemo.data.ChordQuality
+import com.example.chordprogressionmemo.data.NoteName
 import kotlinx.coroutines.*
 
 @OptIn(UnstableApi::class)

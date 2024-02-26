@@ -1,4 +1,4 @@
-package com.example.chordprogressionmemo
+package com.example.chordprogressionmemo.data
 
 
 // 変化記号をまとめたもの
