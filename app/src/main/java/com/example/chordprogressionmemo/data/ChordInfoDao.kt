@@ -24,7 +24,7 @@ interface ChordInfoDao
 
     @Transaction
     fun insertLast(chordInfo: ChordInfo) {
-        var lastOrderIndex = getLastOrderIndex() ?: -1
+        val lastOrderIndex = getLastOrderIndex() ?: -1
         val newChordInfo = chordInfo.copy(orderIndex = lastOrderIndex + 1)
         insert(newChordInfo)
     }
