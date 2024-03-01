@@ -29,9 +29,10 @@ enum class ChordQuality(val displayName: String, val pitchList: List<Int>) {
 @Entity
 data class ChordInfo(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val chordId: Long = 0,
+    val chordProgressId: Long = 0,
     val rootNote: String = "",
     val quality: String = "",
     val bassNote: String = "",
-    val octave: Int = 0
+    val octave: Int = 0,
+    val orderIndex: Long = 0
 )

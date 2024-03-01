@@ -13,11 +13,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.chordprogressionmemo.data.AppDatabase
 import com.example.chordprogressionmemo.ui.theme.ChordProgressionMemoTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val chordInfoDao = AppDatabase.getDatabase(this).chordInfoDao()
+        //val chordInfoDao = null
+
         setContent {
             ChordProgressionMemoTheme {
                 // A surface container using the 'background' color from the theme
@@ -64,7 +68,7 @@ class MainActivity : ComponentActivity() {
                             route = INPUT_SCREEN
                         )
                         {
-                            ChordInputScreen() {
+                            ChordInputScreen(chordInfoDao) {
                                 // ボタン押すと呼ばれる
                                 navController.navigateUp()
                             }

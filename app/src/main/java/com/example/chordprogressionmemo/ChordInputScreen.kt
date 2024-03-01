@@ -1,5 +1,6 @@
 package com.example.chordprogressionmemo
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,9 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.chordprogressionmemo.data.ChordInfo
+import com.example.chordprogressionmemo.data.ChordInfoDao
 import com.example.chordprogressionmemo.data.ChordQuality
 import com.example.chordprogressionmemo.data.NoteName
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Stable
 class ChordInputState(
@@ -72,7 +76,7 @@ class ChordInputState(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChordInputScreen(itemName: String = "", onClick: () -> Unit = {}) {
+fun ChordInputScreen(chordInfoDao: ChordInfoDao, itemName: String = "", onClick: () -> Unit = {}) {
     Scaffold(topBar = {
         TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -94,7 +98,9 @@ fun ChordInputScreen(itemName: String = "", onClick: () -> Unit = {}) {
             modifier = Modifier.padding(it),
 
             ) {
-            InputForm()
+            InputForm(chordInfoDao) {
+                onClick()
+            }
         }
     }
 }
@@ -102,7 +108,7 @@ fun ChordInputScreen(itemName: String = "", onClick: () -> Unit = {}) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputForm() {
+fun InputForm(chordInfoDao :ChordInfoDao, onClick: () -> Unit = {}) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -119,12 +125,14 @@ fun InputForm() {
 
         Row(
         ) {
-            var isPlayButtonEnabled by remember { mutableStateOf(true) }
+            var isButtonEnabled by remember { mutableStateOf(false) }
+            isButtonEnabled = chordState.isValidated()
+
             Button(
                 onClick = {
-                    isPlayButtonEnabled = false
+                    isButtonEnabled = false
                     if (!chordState.isValidated()) {
-                        isPlayButtonEnabled = true
+                        isButtonEnabled = true
                         return@Button
                     }
 
@@ -134,12 +142,30 @@ fun InputForm() {
                         player.play()
                         player.stop(2_000L)
                         player.release()
-                        isPlayButtonEnabled = true
+                        isButtonEnabled = true
                     }
                 },
-                enabled = isPlayButtonEnabled
+                enabled = isButtonEnabled
             ) {
                 Text("プレビュー再生")
+            }
+
+            Button(
+                onClick = {
+                    isButtonEnabled = false
+                    scope.launch {
+                        // 画面遷移は、バックグラウンドでデータベース登録後に
+                        // メインスレッドで実行する必要がある
+                        withContext(Dispatchers.IO) {
+                            chordInfoDao.insertLast(chordState.chordInfo)
+                            Log.d("ChordInputScreen", chordInfoDao.getLastOrderIndex().toString())
+                        }
+                        onClick()
+                    }
+                },
+                enabled = isButtonEnabled
+            ) {
+                Text("登録")
             }
         }
     }
