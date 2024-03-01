@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                             val item = backStackEntry.arguments?.getString("item") ?: ""
                             assert(item != "")
 
-                            ChordProgressionScreen(item) { mode ->
+                            ChordProgressionScreen(item, chordInfoDao) { mode ->
                                 when(mode) {
                                     ButtonMode.BACK -> {
                                         navController.navigateUp()

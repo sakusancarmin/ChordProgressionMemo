@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChordInfoDao
@@ -14,7 +15,7 @@ interface ChordInfoDao
     @Query(
         "SELECT * from ChordInfo ORDER BY orderIndex ASC"
     )
-    fun getAllOrderedByIndex() :List<ChordInfo>
+    fun getAllOrderedByIndex() : Flow<List<ChordInfo>>
 
     @Query(
         "SELECT orderIndex FROM ChordInfo ORDER BY orderIndex DESC LIMIT 1"
