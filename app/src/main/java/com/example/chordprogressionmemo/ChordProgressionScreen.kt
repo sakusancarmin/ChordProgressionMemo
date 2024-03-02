@@ -1,6 +1,7 @@
 package com.example.chordprogressionmemo
 
 import android.annotation.SuppressLint
+import android.app.Application
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -23,14 +25,17 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.chordprogressionmemo.data.ChordInfo
 import com.example.chordprogressionmemo.data.ChordInfoDao
+import kotlinx.coroutines.launch
 
 enum class ButtonMode {
     BACK, ADD
@@ -45,6 +50,10 @@ fun ChordProgressionScreen(
     chordInfoDao: ChordInfoDao,
     onClick: (ButtonMode) -> Unit = {}
 ) {
+    val application = LocalContext.current.applicationContext as Application
+    val viewModel = ChordProgressionViewModel(application, chordInfoDao)
+    val scope = rememberCoroutineScope()
+
     Scaffold(topBar = {
         TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -64,10 +73,25 @@ fun ChordProgressionScreen(
     },
 
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                onClick(ButtonMode.ADD)
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "追加")
+            Row() {
+                FloatingActionButton(onClick = {
+                    onClick(ButtonMode.ADD)
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = "追加")
+                }
+
+                FloatingActionButton(onClick = {
+                    scope.launch {
+                        // コード進行の一番最後のコードまで連続再生する
+                        // playNextChord()内で1コードずつの制御が実施されているため、
+                        // ここのループの本体処理では何もしない。
+                        while (viewModel.playNextChord()) {
+                        }
+                        viewModel.resetPlayback()
+                    }
+                }) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "再生")
+                }
             }
         }
 
@@ -75,15 +99,14 @@ fun ChordProgressionScreen(
         Column(
             modifier = Modifier.padding(it)
         ) {
-            ChordProgressionList(chordInfoDao)
+            ChordProgressionList(viewModel)
         }
     }
 }
 
 @Composable
-fun ChordProgressionList(chordInfoDao: ChordInfoDao) {
-    val chordProgressionList =
-        chordInfoDao.getAllOrderedByIndex().collectAsState(initial = emptyList()).value
+fun ChordProgressionList(viewModel: ChordProgressionViewModel) {
+    val chordProgressionList = viewModel.chordListState.collectAsState().value
 
     LazyColumn(
         modifier = Modifier
@@ -116,5 +139,3 @@ fun ChordProgressionItem(chordInfo: ChordInfo) {
         }
     }
 }
-
-
