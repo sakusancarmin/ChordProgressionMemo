@@ -1,6 +1,7 @@
 package com.example.chordprogressionmemo.data
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
 // コードの種類をまとめたもの
@@ -26,7 +27,16 @@ enum class ChordQuality(val displayName: String, val pitchList: List<Int>) {
 }
 
 
-@Entity
+@Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = ChordProgressionInfo::class,
+            parentColumns = arrayOf("id"),
+            childColumns = arrayOf("chordProgressId"),
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class ChordInfo(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val chordProgressId: Long = 0,

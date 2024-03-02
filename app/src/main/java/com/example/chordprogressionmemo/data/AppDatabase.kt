@@ -6,8 +6,12 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 
-@Database(entities = [ChordInfo::class], version = 1)
+@Database(
+    entities = [ChordProgressionInfo::class, ChordInfo::class],
+    version = 1
+)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun chordProgressionInfoDao(): ChordProgressionInfoDao
     abstract fun chordInfoDao(): ChordInfoDao
 
     companion object {
