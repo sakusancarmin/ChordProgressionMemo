@@ -24,6 +24,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -54,7 +55,6 @@ import kotlinx.coroutines.withContext
 enum class ButtonMode {
     BACK, ADD
 }
-
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,12 +96,14 @@ fun ChordProgressionScreen(
 
                 FloatingActionButton(onClick = {
                     scope.launch {
+                        viewModel.isPlaying.value = true
                         // コード進行の一番最後のコードまで連続再生する
                         // playNextChord()内で1コードずつの制御が実施されているため、
                         // ここのループの本体処理では何もしない。
                         while (viewModel.playNextChord()) {
                         }
                         viewModel.resetPlayback()
+                        viewModel.isPlaying.value = false
                     }
                 }) {
                     Icon(Icons.Default.PlayArrow, contentDescription = "再生")
@@ -145,6 +147,7 @@ fun ChordProgressionItem(chordInfo: ChordInfo, viewModel: ChordProgressionViewMo
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var isDismissed by remember { mutableStateOf(false) }
+
     //var displayConfirmDialog by remember { mutableStateOf(false) }
 
 
@@ -156,7 +159,6 @@ fun ChordProgressionItem(chordInfo: ChordInfo, viewModel: ChordProgressionViewMo
                 val displayMetrics = context.resources.displayMetrics
                 displayMetrics.widthPixels * THRESHOLD_RATE
             },
-
             confirmValueChange = {
                 // TODO 削除キャンセル機能をつけたい
                 /*
@@ -167,37 +169,46 @@ fun ChordProgressionItem(chordInfo: ChordInfo, viewModel: ChordProgressionViewMo
                     false
                 }
                 */
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        viewModel.deleteChordInfo(chordInfo)
-                        // データベースからの削除後、リスト再構成が必要であることを通知する
-                        isDismissed = true
+                // positionalThresholdに基づきスワイプ完了と判断された場合に
+                // コードの削除処理を実施する
+                if (it == SwipeToDismissBoxValue.EndToStart) {
+                    scope.launch {
+                        withContext(Dispatchers.IO) {
+                            viewModel.deleteChordInfo(chordInfo)
+                            // データベースからの削除後、リスト再構成が必要であることを通知する
+                            isDismissed = true
+                        }
                     }
                 }
                 false
             }
         )
 
+        val enableDelete = viewModel.enableDelete.collectAsState().value
         SwipeToDismissBox(
             state = dismissState,
             enableDismissFromStartToEnd = false,
+            enableDismissFromEndToStart = enableDelete,
             backgroundContent = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    Spacer(modifier = Modifier.weight(3f))
-                    Box(
-                        modifier = Modifier
-                            .background(color = Color.Red)
-                            .weight(2f)
-                            .padding(8.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "削除",
-                        )
+                    // enableDisMissFromEndToStartがfalseの場合においても、少しスワイプできてしまう。
+                    // backgroudContentを表示させたくないため、条件判定を入れた
+                    if (enableDelete) {
+                        Spacer(modifier = Modifier.weight(3f))
+                        Box(
+                            modifier = Modifier
+                                .background(color = Color.Red)
+                                .weight(2f)
+                                .padding(8.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "削除",
+                            )
+                        }
                     }
                 }
             }
