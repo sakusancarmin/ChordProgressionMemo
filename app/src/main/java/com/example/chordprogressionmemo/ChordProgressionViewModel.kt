@@ -8,8 +8,10 @@ import com.example.chordprogressionmemo.data.ChordInfoDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 
 class ChordProgressionViewModel(
@@ -22,14 +24,17 @@ class ChordProgressionViewModel(
         chordInfoDao.getAllOrderedByIndex(progInfoId)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     val currentPosition = MutableStateFlow<Int>(-1)
-    var isPlaying = MutableStateFlow<Boolean>(false)
+    private var isPlaying = MutableStateFlow<Boolean>(false)
 
+    val enablePlay: StateFlow<Boolean> = chordListState.combine(isPlaying) { chordList, isPlaying ->
+            chordList.isNotEmpty() && !(isPlaying)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
     val enableDelete: StateFlow<Boolean> = isPlaying.map {
         !(isPlaying.value)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
-    fun resetPlayback() {
+    private fun resetPosition() {
         currentPosition.value = -1
     }
 
@@ -38,13 +43,10 @@ class ChordProgressionViewModel(
         chordInfoDao.deleteWithOrderIndexUpdated(chordInfo)
     }
 
-    fun incrementPosition(): Boolean {
+    private fun incrementPosition(): Boolean {
         val chordList = chordListState.value
         currentPosition.value += 1
-        if (currentPosition.value >= chordList.count()) {
-            return false
-        }
-        return true
+        return currentPosition.value < chordList.count()
     }
 
     fun setPosition(position: Int)
@@ -56,7 +58,22 @@ class ChordProgressionViewModel(
         currentPosition.value = position
     }
 
-    suspend fun playNextChord(): Boolean {
+    fun playChordProgression()
+    {
+        if (!(enablePlay.value)) {
+            return
+        }
+
+        viewModelScope.launch {
+            isPlaying.value = true
+            while(playNextChord()){
+            }
+            resetPosition()
+            isPlaying.value = false
+        }
+    }
+
+    private suspend fun playNextChord(): Boolean {
         if (currentPosition.value < 0) {
             setPosition(0)
         }
@@ -64,13 +81,16 @@ class ChordProgressionViewModel(
         val chordList = chordListState.value
         val player = ChordPlayer(getApplication(), chordList[currentPosition.value])
 
-        player.waitForReady()
-        player.play()
-        player.stop(1_500L)
-        player.release()
+        val job = viewModelScope.launch {
+            player.waitForReady()
+            player.play()
+            player.stop(1_500L)
+            player.release()
+        }
+        job.join()
 
         if (!incrementPosition()) {
-            resetPlayback()
+            resetPosition()
             return false
         }
         return true

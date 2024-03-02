@@ -89,25 +89,20 @@ fun ChordProgressionScreen(
     },
 
         floatingActionButton = {
-            Row() {
+            Row {
                 FloatingActionButton(onClick = {
                     onClick(progInfoId, ButtonMode.ADD)
                 }) {
                     Icon(Icons.Default.Add, contentDescription = "追加")
                 }
 
-                FloatingActionButton(onClick = {
-                    scope.launch {
-                        viewModel.isPlaying.value = true
-                        // コード進行の一番最後のコードまで連続再生する
-                        // playNextChord()内で1コードずつの制御が実施されているため、
-                        // ここのループの本体処理では何もしない。
-                        while (viewModel.playNextChord()) {
+                FloatingActionButton(
+                    onClick = {
+                        scope.launch {
+                            viewModel.playChordProgression()
                         }
-                        viewModel.resetPlayback()
-                        viewModel.isPlaying.value = false
                     }
-                }) {
+                ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = "再生")
                 }
             }
