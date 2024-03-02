@@ -3,6 +3,7 @@ package com.example.chordprogressionmemo
 import android.annotation.SuppressLint
 import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -125,15 +126,16 @@ fun ChordProgressionList(viewModel: ChordProgressionViewModel) {
     val chordProgressionList = viewModel.chordListState.collectAsState().value
 
     LazyColumn(
-        modifier = Modifier
-            .padding(20.dp)
+        modifier = Modifier.padding(20.dp)
     ) {
         // リストの変更があった場合、アイテムの再利用を防ぐためにkeyを指定する
         // 例えばリストの途中の要素をスワイプで削除した場合に、スワイプ済状態となっているアイテムを
         // 引き継がないようにする
+        var index = 0
         items(chordProgressionList, key = { it.id }) { chordInfo ->
-            ChordProgressionItem(chordInfo, viewModel)
+            ChordProgressionItem(chordInfo, index, viewModel)
             HorizontalDivider(thickness = Dp.Hairline)
+            index++
         }
     }
 }
@@ -141,7 +143,7 @@ fun ChordProgressionList(viewModel: ChordProgressionViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChordProgressionItem(chordInfo: ChordInfo, viewModel: ChordProgressionViewModel) {
+fun ChordProgressionItem(chordInfo: ChordInfo, index: Int, viewModel: ChordProgressionViewModel) {
 
     val textStyle = TextStyle(fontSize = 30.sp)
     val context = LocalContext.current
@@ -213,9 +215,15 @@ fun ChordProgressionItem(chordInfo: ChordInfo, viewModel: ChordProgressionViewMo
                 }
             }
         ) {
+            val focusIndex = viewModel.currentPosition.collectAsState().value
+            val color = if(index == focusIndex)
+                MaterialTheme.colorScheme.secondary
+            else MaterialTheme.colorScheme.background
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.background(color = MaterialTheme.colorScheme.background)
+                modifier = Modifier.background(color = color).clickable {
+                    viewModel.setPosition(index)
+                }
             ) {
                 val showBassNote = (chordInfo.rootNote != chordInfo.bassNote)
                 val bassNote = if (showBassNote) "on" + chordInfo.bassNote else ""

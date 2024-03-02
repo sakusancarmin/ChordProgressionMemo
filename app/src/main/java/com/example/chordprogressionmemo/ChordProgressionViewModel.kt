@@ -20,15 +20,16 @@ class ChordProgressionViewModel(
     val chordListState: StateFlow<List<ChordInfo>> =
         chordInfoDao.getAllOrderedByIndex()
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-    private var currentIndex = 0
+    val currentPosition = MutableStateFlow<Int>(-1)
     var isPlaying = MutableStateFlow<Boolean>(false)
+
 
     val enableDelete: StateFlow<Boolean> = isPlaying.map {
         !(isPlaying.value)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     fun resetPlayback() {
-        currentIndex = 0
+        currentPosition.value = -1
     }
 
     fun deleteChordInfo(chordInfo :ChordInfo)
@@ -36,20 +37,41 @@ class ChordProgressionViewModel(
         chordInfoDao.deleteWithOrderIndexUpdated(chordInfo)
     }
 
-    suspend fun playNextChord(): Boolean {
+    fun incrementPosition(): Boolean {
         val chordList = chordListState.value
-
-        if (currentIndex == chordList.count()) {
+        currentPosition.value += 1
+        if (currentPosition.value >= chordList.count()) {
             return false
         }
+        return true
+    }
 
-        val player = ChordPlayer(getApplication(), chordList[currentIndex])
+    fun setPosition(position: Int)
+    {
+        val chordList = chordListState.value
+        if (position >= chordList.count()) {
+            return
+        }
+        currentPosition.value = position
+    }
+
+    suspend fun playNextChord(): Boolean {
+        if (currentPosition.value < 0) {
+            setPosition(0)
+        }
+
+        val chordList = chordListState.value
+        val player = ChordPlayer(getApplication(), chordList[currentPosition.value])
+
         player.waitForReady()
         player.play()
         player.stop(1_500L)
         player.release()
 
-        currentIndex++
+        if (!incrementPosition()) {
+            resetPlayback()
+            return false
+        }
         return true
     }
 
