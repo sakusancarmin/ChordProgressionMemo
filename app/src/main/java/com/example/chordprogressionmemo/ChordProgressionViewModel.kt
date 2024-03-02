@@ -14,11 +14,12 @@ import kotlinx.coroutines.flow.stateIn
 
 class ChordProgressionViewModel(
     application: Application,
-    private val chordInfoDao: ChordInfoDao
+    private val chordInfoDao: ChordInfoDao,
+    progInfoId: Long
 ) : AndroidViewModel(application) {
 
     val chordListState: StateFlow<List<ChordInfo>> =
-        chordInfoDao.getAllOrderedByIndex()
+        chordInfoDao.getAllOrderedByIndex(progInfoId)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     val currentPosition = MutableStateFlow<Int>(-1)
     var isPlaying = MutableStateFlow<Boolean>(false)

@@ -1,6 +1,5 @@
 package com.example.chordprogressionmemo
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -76,7 +75,7 @@ class ChordInputState(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChordInputScreen(chordInfoDao: ChordInfoDao, itemName: String = "", onClick: () -> Unit = {}) {
+fun ChordInputScreen(prodInfoId :Long, chordInfoDao: ChordInfoDao, itemName: String = "", onClick: () -> Unit = {}) {
     Scaffold(topBar = {
         TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -98,7 +97,7 @@ fun ChordInputScreen(chordInfoDao: ChordInfoDao, itemName: String = "", onClick:
             modifier = Modifier.padding(it),
 
             ) {
-            InputForm(chordInfoDao) {
+            InputForm(prodInfoId, chordInfoDao) {
                 onClick()
             }
         }
@@ -108,7 +107,7 @@ fun ChordInputScreen(chordInfoDao: ChordInfoDao, itemName: String = "", onClick:
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputForm(chordInfoDao :ChordInfoDao, onClick: () -> Unit = {}) {
+fun InputForm(prodInfoId :Long, chordInfoDao :ChordInfoDao, onClick: () -> Unit = {}) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -116,7 +115,7 @@ fun InputForm(chordInfoDao :ChordInfoDao, onClick: () -> Unit = {}) {
         modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // オクターブ音のみ初期値を持つ
-        val chordState = remember { ChordInputState(ChordInfo(octave = 4)) }
+        val chordState = remember { ChordInputState(ChordInfo(chordProgressId = prodInfoId, octave = 4)) }
 
         RootNoteDropdownMenuBox(chordState)
         ChordQualityDropdownMenuBox(chordState)
@@ -158,7 +157,6 @@ fun InputForm(chordInfoDao :ChordInfoDao, onClick: () -> Unit = {}) {
                         // メインスレッドで実行する必要がある
                         withContext(Dispatchers.IO) {
                             chordInfoDao.insertLast(chordState.chordInfo)
-                            Log.d("ChordInputScreen", chordInfoDao.getLastOrderIndex().toString())
                         }
                         onClick()
                     }

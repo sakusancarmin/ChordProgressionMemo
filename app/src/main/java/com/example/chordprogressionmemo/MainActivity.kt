@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val chordInfoDao = AppDatabase.getDatabase(this).chordInfoDao()
-        //val chordInfoDao = null
+        val progInfoDao = AppDatabase.getDatabase(this).chordProgressionInfoDao()
 
         setContent {
             ChordProgressionMemoTheme {
@@ -37,38 +37,47 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = TOP_SCREEN) {
                         composable(route = TOP_SCREEN) {
-                            TopScreen() { name ->
+                            TopScreen(progInfoDao) { progInfo ->
                                 // ChordListのitemをクリックすると呼ばれる
-                                navController.navigate("$CHORD_SCREEN/$name")
+                                navController.navigate("$CHORD_SCREEN/${progInfo.id}/${progInfo.name}")
                             }
                         }
 
                         composable(
-                            route = "$CHORD_SCREEN/{item}",
+                            route = "$CHORD_SCREEN/{id}/{name}",
                             arguments = listOf(
-                                navArgument("item") { type = NavType.StringType },
+                                navArgument("id") { type = NavType.LongType },
+                                navArgument("name") { type = NavType.StringType }
                             )
                         ) { backStackEntry ->
-                            val item = backStackEntry.arguments?.getString("item") ?: ""
-                            assert(item != "")
+                            val id = backStackEntry.arguments?.getLong("id") ?: -1
+                            val name = backStackEntry.arguments?.getString("name") ?: ""
+                            assert(id >= 0)
+                            assert(name != "")
 
-                            ChordProgressionScreen(item, chordInfoDao) { mode ->
-                                when(mode) {
+                            ChordProgressionScreen(id, name, chordInfoDao) { progInfoId, mode ->
+                                when (mode) {
                                     ButtonMode.BACK -> {
                                         navController.navigateUp()
                                     }
+
                                     ButtonMode.ADD -> {
-                                        navController.navigate(INPUT_SCREEN)
+                                        navController.navigate("$INPUT_SCREEN/${progInfoId}")
                                     }
                                 }
                             }
                         }
 
                         composable(
-                            route = INPUT_SCREEN
-                        )
-                        {
-                            ChordInputScreen(chordInfoDao) {
+                            route = "$INPUT_SCREEN/{progInfoId}",
+                            arguments = listOf(
+                                navArgument("progInfoId") { type = NavType.LongType }
+                            )
+                        ) { backStackEntry ->
+                            val progInfoId = backStackEntry.arguments?.getLong("progInfoId") ?: -1
+                            assert(progInfoId >= 0)
+
+                            ChordInputScreen(progInfoId, chordInfoDao) {
                                 // ボタン押すと呼ばれる
                                 navController.navigateUp()
                             }

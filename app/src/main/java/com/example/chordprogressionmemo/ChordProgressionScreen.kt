@@ -61,12 +61,13 @@ enum class ButtonMode {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChordProgressionScreen(
+    progInfoId: Long,
     itemName: String = "",
     chordInfoDao: ChordInfoDao,
-    onClick: (ButtonMode) -> Unit = {}
+    onClick: (Long, ButtonMode) -> Unit = { _, _ -> }
 ) {
     val application = LocalContext.current.applicationContext as Application
-    val viewModel = ChordProgressionViewModel(application, chordInfoDao)
+    val viewModel = ChordProgressionViewModel(application, chordInfoDao, progInfoId)
     val scope = rememberCoroutineScope()
 
     Scaffold(topBar = {
@@ -77,7 +78,7 @@ fun ChordProgressionScreen(
             Text(text = itemName)
         }, navigationIcon = {
             IconButton(onClick = {
-                onClick(ButtonMode.BACK)
+                onClick(progInfoId, ButtonMode.BACK)
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
@@ -90,7 +91,7 @@ fun ChordProgressionScreen(
         floatingActionButton = {
             Row() {
                 FloatingActionButton(onClick = {
-                    onClick(ButtonMode.ADD)
+                    onClick(progInfoId, ButtonMode.ADD)
                 }) {
                     Icon(Icons.Default.Add, contentDescription = "追加")
                 }
@@ -123,7 +124,7 @@ fun ChordProgressionScreen(
 
 @Composable
 fun ChordProgressionList(viewModel: ChordProgressionViewModel) {
-    val chordProgressionList = viewModel.chordListState.collectAsState().value
+    val chordProgressionList by viewModel.chordListState.collectAsState()
 
     LazyColumn(
         modifier = Modifier.padding(20.dp)
@@ -216,14 +217,16 @@ fun ChordProgressionItem(chordInfo: ChordInfo, index: Int, viewModel: ChordProgr
             }
         ) {
             val focusIndex = viewModel.currentPosition.collectAsState().value
-            val color = if(index == focusIndex)
+            val color = if (index == focusIndex)
                 MaterialTheme.colorScheme.secondary
             else MaterialTheme.colorScheme.background
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.background(color = color).clickable {
-                    viewModel.setPosition(index)
-                }
+                modifier = Modifier
+                    .background(color = color)
+                    .clickable {
+                        viewModel.setPosition(index)
+                    }
             ) {
                 val showBassNote = (chordInfo.rootNote != chordInfo.bassNote)
                 val bassNote = if (showBassNote) "on" + chordInfo.bassNote else ""

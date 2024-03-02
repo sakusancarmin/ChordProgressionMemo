@@ -17,9 +17,9 @@ interface ChordInfoDao
     fun delete(chordInfo: ChordInfo)
 
     @Query(
-        "SELECT * from ChordInfo ORDER BY orderIndex ASC"
+        "SELECT * FROM ChordInfo WHERE chordProgressId = :progInfoId ORDER BY orderIndex ASC"
     )
-    fun getAllOrderedByIndex() : Flow<List<ChordInfo>>
+    fun getAllOrderedByIndex(progInfoId :Long) : Flow<List<ChordInfo>>
 
     @Query(
         "SELECT orderIndex FROM ChordInfo ORDER BY orderIndex DESC LIMIT 1"
