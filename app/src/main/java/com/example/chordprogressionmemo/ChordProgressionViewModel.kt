@@ -25,6 +25,11 @@ class ChordProgressionViewModel(
         currentIndex = 0
     }
 
+    fun deleteChordInfo(chordInfo :ChordInfo)
+    {
+        chordInfoDao.deleteWithOrderIndexUpdated(chordInfo)
+    }
+
     suspend fun playNextChord(): Boolean {
         val chordList = chordListState.value
 
