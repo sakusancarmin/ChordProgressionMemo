@@ -234,14 +234,18 @@ fun ChordProgressionItem(chordInfo: ChordInfo, index: Int, viewModel: ChordProgr
         ) {
             val focusIndex = viewModel.currentPosition.collectAsState().value
             val color = if (index == focusIndex)
-                MaterialTheme.colorScheme.secondary
+                MaterialTheme.colorScheme.secondaryContainer
             else MaterialTheme.colorScheme.background
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .background(color = color)
                     .clickable {
-                        viewModel.setPosition(index)
+                        val setIndex = when {
+                            index != focusIndex -> index
+                            else -> -1
+                        }
+                        viewModel.setPosition(setIndex)
                     }
             ) {
                 val showBassNote = (chordInfo.rootNote != chordInfo.bassNote)
