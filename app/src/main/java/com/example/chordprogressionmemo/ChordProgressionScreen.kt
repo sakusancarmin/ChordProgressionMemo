@@ -15,7 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PlayDisabled
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -68,7 +70,7 @@ fun ChordProgressionScreen(
 ) {
     val application = LocalContext.current.applicationContext as Application
     val viewModel = ChordProgressionViewModel(application, chordInfoDao, progInfoId)
-    val scope = rememberCoroutineScope()
+    //val scope = rememberCoroutineScope()
 
     Scaffold(topBar = {
         TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
@@ -96,14 +98,33 @@ fun ChordProgressionScreen(
                     Icon(Icons.Default.Add, contentDescription = "追加")
                 }
 
-                FloatingActionButton(
-                    onClick = {
-                        scope.launch {
-                            viewModel.playChordProgression()
+                val playbackState by viewModel.playbackState.collectAsState()
+                when (playbackState) {
+                    PlaybackState.PLAYABLE -> {
+                        FloatingActionButton(
+                            onClick = {
+                                viewModel.playChordProgression()
+                            }
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = "再生")
                         }
                     }
-                ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = "再生")
+                    PlaybackState.PLAYING -> {
+                        FloatingActionButton(
+                            onClick = {
+                                viewModel.stopChordProgression()
+                            }
+                        ) {
+                            Icon(Icons.Default.Pause, contentDescription = "一時停止")
+                        }
+                    }
+                    else -> {
+                        FloatingActionButton(
+                            onClick = {}
+                        ) {
+                            Icon(Icons.Default.PlayDisabled, contentDescription = "再生できません")
+                        }
+                    }
                 }
             }
         }
