@@ -3,8 +3,10 @@ package com.example.chordprogressionmemo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Button
@@ -28,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -75,7 +78,7 @@ class ChordInputState(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChordInputScreen(prodInfoId :Long, chordInfoDao: ChordInfoDao, itemName: String = "", onClick: () -> Unit = {}) {
+fun ChordInputScreen(prodInfoId :Long, chordInfoDao: ChordInfoDao, itemName: String = "コード登録画面", onClick: () -> Unit = {}) {
     Scaffold(topBar = {
         TopAppBar(colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -97,6 +100,7 @@ fun ChordInputScreen(prodInfoId :Long, chordInfoDao: ChordInfoDao, itemName: Str
             modifier = Modifier.padding(it),
 
             ) {
+            Spacer(modifier = Modifier.padding(30.dp))
             InputForm(prodInfoId, chordInfoDao) {
                 onClick()
             }
@@ -112,8 +116,10 @@ fun InputForm(prodInfoId :Long, chordInfoDao :ChordInfoDao, onClick: () -> Unit 
     val scope = rememberCoroutineScope()
 
     Column(
-        modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(40.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
         // オクターブ音のみ初期値を持つ
         val chordState = remember { ChordInputState(ChordInfo(chordProgressId = prodInfoId, octave = 4)) }
 
@@ -148,7 +154,7 @@ fun InputForm(prodInfoId :Long, chordInfoDao :ChordInfoDao, onClick: () -> Unit 
             ) {
                 Text("プレビュー再生")
             }
-
+            Spacer(Modifier.size(10.dp))
             Button(
                 onClick = {
                     isButtonEnabled = false
@@ -254,7 +260,7 @@ fun BassNoteDropdownMenuBox(chordState: ChordInputState) {
         TextField(
             modifier = Modifier.menuAnchor(),
             readOnly = true,
-            value = "on" + chordState.chordInfo.bassNote,
+            value = chordState.chordInfo.bassNote,
             onValueChange = {},
             label = { Text("ベース音") },
             trailingIcon = { TrailingIcon(expanded = expanded) },
@@ -265,10 +271,8 @@ fun BassNoteDropdownMenuBox(chordState: ChordInputState) {
             onDismissRequest = { expanded = false },
         ) {
             noteOptions.forEach { noteName ->
-                val displayName = "on" + noteName.displayName()
-
                 DropdownMenuItem(text = {
-                    Text(displayName)
+                    Text(noteName.displayName())
                 }, onClick = {
                     chordState.setBassNote(noteName.displayName())
                     expanded = false

@@ -8,19 +8,19 @@ import androidx.room.PrimaryKey
 // pitchListには、rootNoteを0としたときの相対的な音の高さが入る
 enum class ChordQuality(val displayName: String, val pitchList: List<Int>) {
     MAJOR("", listOf(0, 4, 7)),
-    MINOR("m", listOf(0, 3, 7)),
-    MAJORSEVENTH("M7", listOf(0, 4, 11)),
-    MINORSEVENTH("m7", listOf(0, 3, 10)),
-    MINORMAJORSEVENTH("Mm7", listOf(0, 3, 11)),
+    MINOR("-", listOf(0, 3, 7)),
+    MAJORSEVENTH("△7", listOf(0, 4, 11)),
+    MINORSEVENTH("-7", listOf(0, 3, 10)),
+    MINORMAJORSEVENTH("-△7", listOf(0, 3, 11)),
     SEVENTH("7", listOf(0, 4, 10)),
     NINTH("9", listOf(0, 4, 10, 14)),
     FLATNINTH("-9", listOf(0, 4, 10, 13)),
     SUSFOURTH("sus4", listOf(0, 5, 7)),
     SUSFOURTHSEVENTH("7sus4", listOf(0, 5, 10)),
-    DIMINISH("dim", listOf(0, 3, 6)),
-    DIMINISHSEVENTH("dim7", listOf(0, 3, 6, 9)),
-    HALFDIMINISH("m7-5", listOf(0, 3, 6, 10)),
-    AUGMENT("aug", listOf(0, 4, 8));
+    DIMINISH("o", listOf(0, 3, 6)),
+    DIMINISHSEVENTH("o7", listOf(0, 3, 6, 9)),
+    HALFDIMINISH("ø", listOf(0, 3, 6, 10)),
+    AUGMENT("+", listOf(0, 4, 8));
 
     fun displayName(): String {
         return displayName

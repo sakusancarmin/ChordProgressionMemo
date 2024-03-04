@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -44,7 +46,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -91,13 +96,7 @@ fun ChordProgressionScreen(
     },
 
         floatingActionButton = {
-            Row {
-                FloatingActionButton(onClick = {
-                    onClick(progInfoId, ButtonMode.ADD)
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = "追加")
-                }
-
+            Row () {
                 val playbackState by viewModel.playbackState.collectAsState()
                 when (playbackState) {
                     PlaybackState.PLAYABLE -> {
@@ -126,6 +125,12 @@ fun ChordProgressionScreen(
                         }
                     }
                 }
+                Spacer(Modifier.size(10.dp))
+                FloatingActionButton(onClick = {
+                    onClick(progInfoId, ButtonMode.ADD)
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = "追加")
+                }
             }
         }
 
@@ -143,7 +148,7 @@ fun ChordProgressionList(viewModel: ChordProgressionViewModel) {
     val chordProgressionList by viewModel.chordListState.collectAsState()
 
     LazyColumn(
-        modifier = Modifier.padding(20.dp)
+        modifier = Modifier.padding(15.dp),
     ) {
         // リストの変更があった場合、アイテムの再利用を防ぐためにkeyを指定する
         // 例えばリストの途中の要素をスワイプで削除した場合に、スワイプ済状態となっているアイテムを
@@ -167,14 +172,12 @@ fun ChordProgressionItem(chordInfo: ChordInfo, index: Int, viewModel: ChordProgr
     val scope = rememberCoroutineScope()
     var isDismissed by remember { mutableStateOf(false) }
 
-    //var displayConfirmDialog by remember { mutableStateOf(false) }
-
-
+    //var displayConfirmDialog by remember { mutableStateOf(false)
     CompositionLocalProvider(LocalTextStyle provides textStyle) {
         val dismissState = rememberSwipeToDismissBoxState(
             positionalThreshold = {
                 // スワイプ完了とみなす閾値を、画面の横幅に対する割合により設定する
-                val THRESHOLD_RATE = 0.3f
+                val THRESHOLD_RATE = 0.4f
                 val displayMetrics = context.resources.displayMetrics
                 displayMetrics.widthPixels * THRESHOLD_RATE
             },
@@ -210,7 +213,7 @@ fun ChordProgressionItem(chordInfo: ChordInfo, index: Int, viewModel: ChordProgr
             enableDismissFromEndToStart = enableDelete,
             backgroundContent = {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // enableDisMissFromEndToStartがfalseの場合においても、少しスワイプできてしまう。
                     // backgroudContentを表示させたくないため、条件判定を入れた
@@ -219,13 +222,14 @@ fun ChordProgressionItem(chordInfo: ChordInfo, index: Int, viewModel: ChordProgr
                         Box(
                             modifier = Modifier
                                 .background(color = Color.Red)
-                                .weight(2f)
-                                .padding(8.dp),
+                                .padding(8.dp)
+                                .weight(2f),
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
                                 Icons.Default.Delete,
                                 contentDescription = "削除",
+                                modifier = Modifier.fillMaxSize()
                             )
                         }
                     }
@@ -237,7 +241,7 @@ fun ChordProgressionItem(chordInfo: ChordInfo, index: Int, viewModel: ChordProgr
                 MaterialTheme.colorScheme.secondaryContainer
             else MaterialTheme.colorScheme.background
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Bottom,
                 modifier = Modifier
                     .background(color = color)
                     .clickable {
@@ -249,11 +253,24 @@ fun ChordProgressionItem(chordInfo: ChordInfo, index: Int, viewModel: ChordProgr
                     }
             ) {
                 val showBassNote = (chordInfo.rootNote != chordInfo.bassNote)
-                val bassNote = if (showBassNote) "on" + chordInfo.bassNote else ""
-                val chordName = chordInfo.rootNote + chordInfo.quality + bassNote
+                val bassNote = if (showBassNote) "/" + chordInfo.bassNote else ""
 
-                Text(modifier = Modifier.weight(1f), text = chordName)
-                Text(modifier = Modifier.weight(1f), text = "音程" + chordInfo.octave.toString())
+                val annotatedChordName = buildAnnotatedString {
+                    append(chordInfo.rootNote)
+
+                    withStyle(style = SpanStyle(fontSize = textStyle.fontSize.div(1.5))) {
+                        append(chordInfo.quality)
+                    }
+
+                    append(bassNote)
+                }
+
+                Text(modifier = Modifier.weight(1f), text = annotatedChordName)
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = "音程" + chordInfo.octave.toString(),
+                    fontSize = 20.sp
+                    )
             }
         }
 
